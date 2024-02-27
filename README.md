@@ -87,11 +87,17 @@ Most general properties of the Swagger model is configurable using the swaggerCo
           <x-custom-field-1>my-custom-field-1</x-custom-field-1>
           <x-custom-field-2>my-custom-field-2</x-custom-field-2>
         </extensions>
+        <enrichers>
+            <enricher>my.cusom.enricher</enricher>
+        </enrichers>
       </info>
       <descriptionFile>src/test/resources/descriptions.md</descriptionFile>
     </swaggerConfig>
 ```
-
+### Enriching the generated OpenAPI documentation
+The plugin supports optional custom enrichers that can be used to add properties or modify the generated OpenAPI specification. 
+Enrichers are classes with a default constructor that implements `BiConsumer<OpenAPI, Set<Class<?>>>`. For example these can be used 
+to add extensions to resources with some custom annotation.
 
 ## Deploying
 

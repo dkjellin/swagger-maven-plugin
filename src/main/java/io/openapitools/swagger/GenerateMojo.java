@@ -1,5 +1,16 @@
 package io.openapitools.swagger;
 
+import io.openapitools.swagger.config.SwaggerConfig;
+import io.swagger.v3.jaxrs2.Reader;
+import io.swagger.v3.oas.models.OpenAPI;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.MavenProjectHelper;
+
 import javax.ws.rs.core.Application;
 import java.io.File;
 import java.io.IOException;
@@ -11,21 +22,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
-import io.openapitools.swagger.config.SwaggerConfig;
-import io.swagger.v3.jaxrs2.Reader;
-import io.swagger.v3.oas.models.OpenAPI;
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.MavenProjectHelper;
+import static java.util.Collections.emptySet;
 
 /**
  * Maven mojo to generate OpenAPI documentation document based on Swagger.
@@ -50,6 +49,12 @@ public class GenerateMojo extends AbstractMojo {
      */
     @Parameter
     private Set<String> resourcePackages;
+
+    /**
+     * List of enrichers that enrich the scanned classes
+     */
+    @Parameter(required = false)
+    private Set<String> enrichers;
 
     /**
      * Recurse into resourcePackages child packages.
@@ -124,7 +129,26 @@ public class GenerateMojo extends AbstractMojo {
             Application application = resolveApplication(reflectiveScanner);
             reader.setApplication(application);
 
-            OpenAPI swagger = OpenAPISorter.sort(reader.read(reflectiveScanner.classes()));
+            Set<Class<?>> classes = reflectiveScanner.classes();
+            OpenAPI swagger = OpenAPISorter.sort(reader.read(classes));
+
+            if (enrichers == null) {
+                enrichers = emptySet();
+            }
+            enrichers.forEach(enricher -> {
+                Class<?> aClass = ClassUtils.loadClass(enricher, clzLoader);
+                if (aClass == null) {
+                    getLog().error("Couldn't load enricher class " + enricher);
+                }
+
+                BiConsumer<OpenAPI, Set<Class<?>>> e = (BiConsumer<OpenAPI, Set<Class<?>>>) ClassUtils.createInstance(aClass);
+                if (e != null) {
+                    e.accept(swagger, classes);
+                } else {
+                    getLog().error("Could not create instance of enricher class, does it implement BiConsumer<OpenAPI, Set<Class<?>>? " +
+                                   "Failing class: " + e);
+                }
+            });
 
             if (outputDirectory.mkdirs()) {
                 getLog().debug("Created output directory " + outputDirectory);

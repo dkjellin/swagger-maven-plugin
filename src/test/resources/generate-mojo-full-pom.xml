@@ -160,6 +160,10 @@
                     <resourcePackages>
                         <resourcePackage>io.openapitools.swagger.example</resourcePackage>
                     </resourcePackages>
+                    <enrichers>
+                        <enricher>io.openapitools.swagger.example.TitleEnricher</enricher>
+                        <enricher>io.openapitools.swagger.example.DescriptionEnricher</enricher>
+                    </enrichers>
                     <outputFormats>
                         <outputFormat>JSON</outputFormat>
                         <outputFormat>YAML</outputFormat>
