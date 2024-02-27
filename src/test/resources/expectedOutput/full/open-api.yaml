@@ -1,10 +1,10 @@
 openapi: 3.0.1
 info:
-  title: Title
+  title: Title (Enriched)
   description: |-
     # Description
 
-    This is some description to be included.
+    This is some description to be included. (Enriched)
   termsOfService: Terms
   contact:
     name: My Name
