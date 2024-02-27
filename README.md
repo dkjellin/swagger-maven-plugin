@@ -88,7 +88,7 @@ Most general properties of the Swagger model is configurable using the swaggerCo
           <x-custom-field-2>my-custom-field-2</x-custom-field-2>
         </extensions>
         <enrichers>
-            <enricher>my.cusom.enricher</enricher>
+            <enricher>my.custom.enricher</enricher>
         </enrichers>
       </info>
       <descriptionFile>src/test/resources/descriptions.md</descriptionFile>
